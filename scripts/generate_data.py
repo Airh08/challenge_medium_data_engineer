@@ -24,13 +24,17 @@ from datetime import datetime, timedelta
 
 from faker import Faker
 
-# ── Configuración ────────────────────────────────────────────────────────────
+import logging
 
-NUM_RECORDS = 5_000
-OUTPUT_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "creditos_mes.csv",
+logging.basicConfig(
+    filename=r'..\challenge_medium_data_engineer\logs\generate_data.log',
+    filemode='a',
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
+# ── Configuración ────────────────────────────────────────────────────────────
+NUM_RECORDS = 5_000
+OUTPUT_FILE = r"..\challenge_medium_data_engineer\data\raw\creditos_mes.csv"
 
 # Probabilidades de problemas de calidad
 P_NULL_ID_CREDITO = 0.02
@@ -230,20 +234,20 @@ def imprimir_reporte(registros: list[dict]) -> None:
     ids_unicos = len({r["id_credito"] for r in registros if r["id_credito"] != ""})
     duplicados = (total - sum(1 for r in registros if r["id_credito"] == "")) - ids_unicos
 
-    print("=" * 55)
-    print("  GENERACIÓN DE DATOS SINTÉTICOS — REPORTE")
-    print("=" * 55)
-    print(f"  Registros generados:        {total:,}")
-    print(f"  Archivo de salida:          {OUTPUT_FILE}")
-    print("-" * 55)
-    print("  Problemas de calidad inyectados:")
-    print(f"    - Nulos en id_credito:       {nulos_id:>4}  ({nulos_id/total*100:.1f}%)")
-    print(f"    - Nulos en monto:            {nulos_monto:>4}  ({nulos_monto/total*100:.1f}%)")
-    print(f"    - Nulos en fecha_originacion:{nulos_fecha:>4}  ({nulos_fecha/total*100:.1f}%)")
-    print(f"    - Montos negativos:          {negativos:>4}  ({negativos/total*100:.1f}%)")
-    print(f"    - Fechas inválidas:          {fechas_invalidas:>4}  ({fechas_invalidas/total*100:.1f}%)")
-    print(f"    - IDs duplicados:            {duplicados:>4}")
-    print("=" * 55)
+    logging.info("=" * 55)
+    logging.info("  GENERACIÓN DE DATOS SINTÉTICOS — REPORTE")
+    logging.info("=" * 55)
+    logging.info(f"  Registros generados:        {total:,}")
+    logging.info(f"  Archivo de salida:          {OUTPUT_FILE}")
+    logging.info("-" * 55)
+    logging.info("  Problemas de calidad inyectados:")
+    logging.info(f"    - Nulos en id_credito:       {nulos_id:>4}  ({nulos_id/total*100:.1f}%)")
+    logging.info(f"    - Nulos en monto:            {nulos_monto:>4}  ({nulos_monto/total*100:.1f}%)")
+    logging.info(f"    - Nulos en fecha_originacion:{nulos_fecha:>4}  ({nulos_fecha/total*100:.1f}%)")
+    logging.info(f"    - Montos negativos:          {negativos:>4}  ({negativos/total*100:.1f}%)")
+    logging.info(f"    - Fechas inválidas:          {fechas_invalidas:>4}  ({fechas_invalidas/total*100:.1f}%)")
+    logging.info(f"    - IDs duplicados:            {duplicados:>4}")
+    logging.info("=" * 55)
 
 
 def _es_fecha_valida(fecha_str: str) -> bool:
@@ -259,11 +263,11 @@ def _es_fecha_valida(fecha_str: str) -> bool:
 
 
 def main() -> None:
-    print("Generando datos sintéticos de créditos...")
+    logging.info("Generando datos sintéticos de créditos...")
     registros = generar_registros(NUM_RECORDS)
     escribir_csv(registros, OUTPUT_FILE)
     imprimir_reporte(registros)
-    print("\n[OK] Datos sinteticos generados exitosamente.")
+    logging.info("\n[OK] Datos sinteticos generados exitosamente.")
 
 
 if __name__ == "__main__":
