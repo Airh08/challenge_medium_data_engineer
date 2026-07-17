@@ -1,0 +1,12 @@
+2026-07-16 16:57:56,810 - INFO - ==================================================
+2026-07-16 16:57:56,810 - INFO - INICIO DEL PIPELINE DE CALIDAD
+2026-07-16 16:57:56,822 - INFO - Registros cargados: 5000
+2026-07-16 16:57:56,822 - INFO - Ejecutando validaciones de calidad...
+2026-07-16 16:57:56,823 - INFO -   nulos: 265 fallos
+2026-07-16 16:57:56,825 - INFO -   monto rango: 78 fallos
+2026-07-16 16:57:56,827 - INFO -   duplicados: 108 fallos
+2026-07-16 16:57:56,848 - INFO -   formato fecha: 50 fallos
+2026-07-16 16:57:56,850 - INFO - CSV de fallidos guardado: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\reports\registros_fallidos.csv
+2026-07-16 16:57:57,133 - INFO - Reporte Excel guardado: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\reports\reporte_calidad.xlsx
+2026-07-16 16:57:57,134 - INFO - Reporte Markdown guardado: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\reports\reporte_calidad.md
+2026-07-16 16:57:57,135 - INFO - PIPELINE FINALIZADO EXITOSAMENTE

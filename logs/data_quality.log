@@ -1,0 +1,37 @@
+2026-07-17 08:58:08,619 - INFO - ==================================================
+2026-07-17 08:58:08,633 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 08:58:08,663 - INFO -   nulos: 265 fallos
+2026-07-17 08:58:08,664 - INFO -   monto rango: 78 fallos
+2026-07-17 08:58:08,664 - INFO -   duplicados: 108 fallos
+2026-07-17 08:58:08,665 - INFO -   formato fecha: 50 fallos
+2026-07-17 09:08:34,828 - INFO - ==================================================
+2026-07-17 09:08:34,841 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 09:08:34,863 - INFO -   nulos: 265 fallos
+2026-07-17 09:08:34,863 - INFO -   monto rango: 78 fallos
+2026-07-17 09:08:34,865 - INFO -   duplicados: 108 fallos
+2026-07-17 09:08:34,865 - INFO -   formato fecha: 50 fallos
+2026-07-17 09:08:34,865 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 09:08:34,865 - INFO - PIPELINE FINALIZADO EXITOSAMENTE
+2026-07-17 09:27:34,324 - INFO - ==================================================
+2026-07-17 09:27:34,336 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 09:27:34,361 - INFO -   nulos: 265 fallos
+2026-07-17 09:27:34,361 - INFO -   monto rango: 78 fallos
+2026-07-17 09:27:34,362 - INFO -   duplicados: 108 fallos
+2026-07-17 09:27:34,362 - INFO -   formato fecha: 50 fallos
+2026-07-17 09:27:34,362 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 09:28:13,855 - INFO - ==================================================
+2026-07-17 09:28:13,869 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 09:28:13,891 - INFO -   nulos: 265 fallos
+2026-07-17 09:28:13,892 - INFO -   monto rango: 78 fallos
+2026-07-17 09:28:13,893 - INFO -   duplicados: 108 fallos
+2026-07-17 09:28:13,893 - INFO -   formato fecha: 50 fallos
+2026-07-17 09:28:13,893 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 09:28:13,896 - INFO - PIPELINE FINALIZADO EXITOSAMENTE
+2026-07-17 09:28:41,843 - INFO - ==================================================
+2026-07-17 09:28:41,855 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 09:28:41,876 - INFO -   nulos: 265 fallos
+2026-07-17 09:28:41,878 - INFO -   monto rango: 78 fallos
+2026-07-17 09:28:41,878 - INFO -   duplicados: 108 fallos
+2026-07-17 09:28:41,878 - INFO -   formato fecha: 50 fallos
+2026-07-17 09:28:41,879 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 09:28:41,881 - INFO - PIPELINE FINALIZADO EXITOSAMENTE
