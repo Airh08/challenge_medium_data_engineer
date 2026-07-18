@@ -1,0 +1,568 @@
+{
+  "annotations": { "list": [ { "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "target": { "limit": 100, "matchAny": false, "tags": [], "type": "dashboard" }, "type": "dashboard" } ] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Resumen General",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Monto Total' AS metric, ROUND(SUM(monto)) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Originado (MXN)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Total Creditos' AS metric, COUNT(*) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Créditos",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "purple", "value": null } ] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Ticket Promedio' AS metric, ROUND(AVG(monto)) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Ticket Promedio",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": {
+        "displayLabels": ["percent", "name"],
+        "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT estatus_primer_pago AS metric, COUNT(*) AS value FROM marts.fact_originaciones GROUP BY estatus_primer_pago",
+          "refId": "A"
+        }
+      ],
+      "title": "% Primer Pago",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 200,
+      "panels": [],
+      "title": "Análisis por Industria",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisPlacement": "auto", "fillOpacity": 80, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineWidth": 1, "scaleDistribution": { "type": "linear" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "id": 5,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT di.nombre_industria, SUM(f.monto) AS \"Monto Total\" FROM marts.fact_originaciones f JOIN marts.dim_industria di ON f.industria_id = di.industria_id GROUP BY di.nombre_industria ORDER BY SUM(f.monto) DESC LIMIT 5",
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Industrias por Monto Originado",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisPlacement": "auto", "fillOpacity": 80, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineWidth": 1, "scaleDistribution": { "type": "linear" }, "thresholdsStyle": { "mode": "line+area" } },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 20 }, { "color": "red", "value": 30 } ] },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT di.nombre_industria, ROUND(SUM(CASE WHEN f.estatus_primer_pago = 'Tardío' THEN 1 ELSE 0 END)*100.0/COUNT(*),1) AS \"Indice de Mora %\" FROM marts.fact_originaciones f JOIN marts.dim_industria di ON f.industria_id = di.industria_id GROUP BY di.nombre_industria HAVING ROUND(SUM(CASE WHEN f.estatus_primer_pago = 'Tardío' THEN 1 ELSE 0 END)*100.0/COUNT(*),1) > 20.0 ORDER BY \"Indice de Mora %\" DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Índice de Mora por Industria (>20%)",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "id": 300,
+      "panels": [],
+      "title": "Segmentación y Canales",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisPlacement": "auto", "fillOpacity": 80, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineWidth": 1, "scaleDistribution": { "type": "linear" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 0, "y": 21 },
+      "id": 7,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.7,
+        "fullHighlight": false,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "vertical",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT CASE WHEN monto < 50000 THEN 'Micro (<50K)' WHEN monto >= 50000 AND monto < 250000 THEN 'Pequeño (50K-250K)' WHEN monto >= 250000 AND monto < 1000000 THEN 'Mediano (250K-1M)' WHEN monto >= 1000000 THEN 'Grande (>1M)' END AS segmento, ROUND(AVG(monto)) AS \"Ticket Promedio\", COUNT(*) AS \"N° Creditos\" FROM marts.fact_originaciones GROUP BY segmento ORDER BY \"Ticket Promedio\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Ticket Promedio por Segmento",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 8, "y": 21 },
+      "id": 8,
+      "options": {
+        "displayLabels": ["percent", "name"],
+        "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true, "values": ["value", "percent"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT canal, COUNT(*) AS value FROM marts.fact_originaciones GROUP BY canal ORDER BY value DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Distribución por Canal",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Ticket Promedio" }, "properties": [ { "id": "unit", "value": "currencyUSD" } ] },
+          { "matcher": { "id": "byName", "options": "Ticket Minimo" }, "properties": [ { "id": "unit", "value": "currencyUSD" } ] },
+          { "matcher": { "id": "byName", "options": "Ticket Maximo" }, "properties": [ { "id": "unit", "value": "currencyUSD" } ] }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 21 },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Ticket Promedio" }]
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT canal AS \"Canal\", COUNT(*) AS \"Creditos\", ROUND(MIN(monto)) AS \"Ticket Minimo\", ROUND(MAX(monto)) AS \"Ticket Maximo\", ROUND(AVG(monto)) AS \"Ticket Promedio\" FROM marts.fact_originaciones GROUP BY canal ORDER BY \"Ticket Promedio\" DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Tickets por Canal",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 400,
+      "panels": [],
+      "title": "Estadísticas y Tendencia Mensual",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "orange", "value": null } ] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 32 },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Mediana' AS metric, ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY monto)) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Mediana",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 32 },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Percentil 25' AS metric, ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY monto)) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Percentil 25",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null } ] },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 32 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT 'Percentil 75' AS metric, ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY monto)) AS value FROM marts.fact_originaciones",
+          "refId": "A"
+        }
+      ],
+      "title": "Percentil 75",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Plazo Promedio" }, "properties": [ { "id": "unit", "value": "dtdurationms" } ] }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 32 },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Plazo Promedio" }]
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "table",
+          "rawSql": "SELECT di.nombre_industria AS \"Industria\", COUNT(*) AS \"Creditos\", ROUND(AVG(f.plazo_meses),1) AS \"Plazo Promedio (meses)\", MIN(f.plazo_meses) AS \"Plazo Min\", MAX(f.plazo_meses) AS \"Plazo Max\" FROM marts.fact_originaciones f JOIN marts.dim_industria di ON f.industria_id = di.industria_id GROUP BY di.nombre_industria ORDER BY \"Plazo Promedio (meses)\" DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Plazo Promedio por Industria",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 20, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 6, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 38 },
+      "id": 14,
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "time_series",
+          "rawSql": "SELECT dt.fecha_originacion AS time, SUM(f.monto) AS \"Monto Total\" FROM marts.fact_originaciones f JOIN marts.dim_tiempo dt ON f.tiempo_id = dt.tiempo_id GROUP BY dt.fecha_originacion ORDER BY dt.fecha_originacion",
+          "refId": "A"
+        }
+      ],
+      "title": "Monto Originado por Día",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 20, "gradientMode": "opacity", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 6, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 38 },
+      "id": 15,
+      "options": {
+        "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "kapital_postgres" },
+          "format": "time_series",
+          "rawSql": "SELECT dt.fecha_originacion AS time, ROUND(SUM(CASE WHEN f.estatus_primer_pago = 'A Tiempo' THEN 1 ELSE 0 END)*100.0/COUNT(*),1) AS \"% Pago a Tiempo\" FROM marts.fact_originaciones f JOIN marts.dim_tiempo dt ON f.tiempo_id = dt.tiempo_id GROUP BY dt.fecha_originacion ORDER BY dt.fecha_originacion",
+          "refId": "A"
+        }
+      ],
+      "title": "% Pago a Tiempo por Día",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": ["kapital", "creditos", "pymes", "originacion"],
+  "templating": { "list": [] },
+  "time": { "from": "now-90d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Kapital — Dashboard de Originación y Cobranza",
+  "uid": "kapital_kpis",
+  "version": 1,
+  "weekStart": ""
+}

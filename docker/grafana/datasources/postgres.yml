@@ -1,0 +1,20 @@
+# Grafana datasource provisioning
+# Conecta Grafana a PostgreSQL automáticamente al iniciar.
+
+apiVersion: 1
+
+datasources:
+  - name: kapital_postgres
+    uid: kapital_postgres
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: kapital_creditos
+    user: kapital
+    secureJsonData:
+      password: kapital2025
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+    editable: true

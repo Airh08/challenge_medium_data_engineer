@@ -1,0 +1,9 @@
+# Grafana dashboard provisioning
+apiVersion: 1
+
+providers:
+  - name: kapital_dashboards
+    folder: Kapital
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

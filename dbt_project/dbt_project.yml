@@ -1,0 +1,16 @@
+name: "kapital_creditos"
+version: "1.0.0"
+profile: "kapital_duckdb"
+
+# Directorios de modelos
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+models:
+  kapital_creditos:
+    staging:
+      +materialized: table
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: marts
