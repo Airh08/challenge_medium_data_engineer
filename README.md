@@ -1,3 +1,7 @@
+## Reporte de Paxel
+link: https://paxel.ycombinator.com/results/wog5jn5j
+O ver en la ruta: docs\
+
 ## Supuestos y decisiones de diseño
 
 1. **~5,000 créditos PYME** generados con datos sintéticos realistas usando Faker (`es_MX`).
