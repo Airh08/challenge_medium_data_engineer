@@ -1,0 +1,6 @@
+kapital_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../data/kapital_creditos.duckdb"

@@ -10,3 +10,59 @@
 2026-07-16 16:57:57,133 - INFO - Reporte Excel guardado: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\reports\reporte_calidad.xlsx
 2026-07-16 16:57:57,134 - INFO - Reporte Markdown guardado: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\reports\reporte_calidad.md
 2026-07-16 16:57:57,135 - INFO - PIPELINE FINALIZADO EXITOSAMENTE
+2026-07-17 18:32:35,144 - INFO - ==================================================
+2026-07-17 18:32:35,145 - INFO - INICIO DEL PIPELINE
+2026-07-17 18:32:35,160 - INFO - Registros cargados: 5000
+2026-07-17 18:32:35,160 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 18:32:35,195 - INFO -   nulos: 265 fallos
+2026-07-17 18:32:35,196 - INFO -   monto rango: 78 fallos
+2026-07-17 18:32:35,196 - INFO -   duplicados: 108 fallos
+2026-07-17 18:32:35,196 - INFO -   formato fecha: 50 fallos
+2026-07-17 18:32:35,196 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 18:32:35,202 - INFO - Cargando datos limpios en DuckDB...
+2026-07-17 18:32:35,575 - INFO - Registros limpios cargados en raw.raw_creditos: 4514
+2026-07-17 18:32:35,576 - INFO - ==================================================
+2026-07-17 18:32:35,576 - INFO - DBT RUNNER — Ejecutando modelos sobre DuckDB
+2026-07-17 18:32:35,576 - INFO - Base de datos: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\kapital_creditos.duckdb
+2026-07-17 18:32:35,677 - INFO -   Ejecutando modelo: staging.stg_creditos ...
+2026-07-17 18:33:17,620 - INFO - ==================================================
+2026-07-17 18:33:17,620 - INFO - INICIO DEL PIPELINE
+2026-07-17 18:33:17,634 - INFO - Registros cargados: 5000
+2026-07-17 18:33:17,635 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 18:33:17,656 - INFO -   nulos: 265 fallos
+2026-07-17 18:33:17,657 - INFO -   monto rango: 78 fallos
+2026-07-17 18:33:17,657 - INFO -   duplicados: 108 fallos
+2026-07-17 18:33:17,658 - INFO -   formato fecha: 50 fallos
+2026-07-17 18:33:17,658 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 18:33:17,661 - INFO - Cargando datos limpios en DuckDB...
+2026-07-17 18:33:17,960 - INFO - Registros limpios cargados en raw.raw_creditos: 4514
+2026-07-17 18:33:17,961 - INFO - ==================================================
+2026-07-17 18:33:17,961 - INFO - DBT RUNNER — Ejecutando modelos sobre DuckDB
+2026-07-17 18:33:17,961 - INFO - Base de datos: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\kapital_creditos.duckdb
+2026-07-17 18:33:17,973 - INFO -   Ejecutando modelo: staging.stg_creditos ...
+2026-07-17 18:34:28,479 - INFO - ==================================================
+2026-07-17 18:34:28,479 - INFO - INICIO DEL PIPELINE
+2026-07-17 18:34:28,491 - INFO - Registros cargados: 5000
+2026-07-17 18:34:28,491 - INFO - Iniciando validaciones de calidad de datos...
+2026-07-17 18:34:28,515 - INFO -   nulos: 265 fallos
+2026-07-17 18:34:28,515 - INFO -   monto rango: 78 fallos
+2026-07-17 18:34:28,516 - INFO -   duplicados: 108 fallos
+2026-07-17 18:34:28,516 - INFO -   formato fecha: 50 fallos
+2026-07-17 18:34:28,516 - INFO - Estadísticas generadas: {'total_registros': 5000, 'total_fallos': 501, 'total_validos': 4499, 'porcentaje_fallos': 10.02}
+2026-07-17 18:34:28,520 - INFO - Cargando datos limpios en DuckDB...
+2026-07-17 18:34:28,812 - INFO - Registros limpios cargados en raw.raw_creditos: 4514
+2026-07-17 18:34:28,813 - INFO - ==================================================
+2026-07-17 18:34:28,813 - INFO - DBT RUNNER — Ejecutando modelos sobre DuckDB
+2026-07-17 18:34:28,813 - INFO - Base de datos: D:\Documentos\Aaron\Procesos de reclutamiento\Kapital\challenge_medium_data_engineer\data\kapital_creditos.duckdb
+2026-07-17 18:34:28,825 - INFO -   Ejecutando modelo: staging.stg_creditos ...
+2026-07-17 18:34:28,898 - INFO -     -> 4514 filas en 0.07s
+2026-07-17 18:34:28,898 - INFO -   Ejecutando modelo: marts.dim_cliente ...
+2026-07-17 18:34:28,954 - INFO -     -> 4514 filas en 0.05s
+2026-07-17 18:34:28,954 - INFO -   Ejecutando modelo: marts.dim_tiempo ...
+2026-07-17 18:34:29,000 - INFO -     -> 91 filas en 0.04s
+2026-07-17 18:34:29,000 - INFO -   Ejecutando modelo: marts.dim_industria ...
+2026-07-17 18:34:29,045 - INFO -     -> 10 filas en 0.04s
+2026-07-17 18:34:29,045 - INFO -   Ejecutando modelo: marts.fact_originaciones ...
+2026-07-17 18:34:29,120 - INFO -     -> 4514 filas en 0.08s
+2026-07-17 18:34:29,120 - INFO - DBT RUNNER completado — 5 modelos ejecutados.
+2026-07-17 18:34:29,335 - INFO - PIPELINE FINALIZADO EXITOSAMENTE
