@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL 16 con DDL del modelo estrella ──────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: kapital_postgres
+    environment:
+      POSTGRES_DB: kapital_creditos
+      POSTGRES_USER: kapital
+      POSTGRES_PASSWORD: kapital2025
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init/01_create_tables.sql:/docker-entrypoint-initdb.d/01_create_tables.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kapital -d kapital_creditos"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+
+  # ── Contenedor de inicialización: carga CSV y transforma ─────────────
+  etl:
+    image: python:3.12-slim
+    container_name: kapital_etl
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: kapital_creditos
+      POSTGRES_USER: kapital
+      POSTGRES_PASSWORD: kapital2025
+    volumes:
+      - ./init/02_load_and_transform.py:/scripts/load.py:ro
+      - ../data/raw/creditos_mes.csv:/data/creditos_mes.csv:ro
+    command: >
+      bash -c "
+        echo '[ETL] Instalando psycopg2...' &&
+        pip install -q psycopg2-binary &&
+        echo '[ETL] Ejecutando carga y transformacion...' &&
+        python3 /scripts/load.py
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Grafana 11 con dashboard pre-configurado ──────────────────────────
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: kapital_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  grafana_data:
