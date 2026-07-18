@@ -10,19 +10,16 @@ Parte 2 — Calidad de datos:
   - Formato inválido de fechas
 
 Salidas:
-  - data/quality/reporte_calidad.xlsx   — Reporte en Excel
-  - data/quality/reporte_calidad.md     — Reporte en Markdown
   - data/quality/registros_fallidos.csv — Registros que no pasaron las pruebas
       (columnas: id_credito, regla, motivo)
 """
 
-import csv
 import logging
 import os
-from collections import Counter
 from datetime import datetime
 
 import pandas as pd
+import numpy as np
 
 # ── Configuración de rutas ───────────────────────────────────────────────────
 
@@ -42,7 +39,7 @@ MONTO_MAX = 5_000_000
 os.makedirs(LOGS_DIR, exist_ok=True)
 
 logging.basicConfig(
-    filename=os.path.join(LOGS_DIR, "pipeline.log"),
+    filename=os.path.join(LOGS_DIR, "data_quality.log"),
     filemode="a",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -50,356 +47,163 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# VALIDACIONES
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def _es_fecha_valida(fecha_str: str) -> bool:
-    """Verifica que una cadena tenga formato YYYY-MM-DD y sea una fecha real."""
-    partes = fecha_str.strip().split("-")
-    if len(partes) != 3:
-        return False
-    if not all(p.isdigit() for p in partes):
-        return False
+def ejecutar_validaciones(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Ejecuta las validaciones de calidad de datos y genera los reportes correspondientes.
+    """
+    logger.info("Iniciando validaciones de calidad de datos...")
     try:
-        datetime.strptime(fecha_str.strip(), "%Y-%m-%d")
-        return True
-    except ValueError:
-        return False
+        # 1. Crear identificadores de fila para reportar si id_credito es nulo o vacío
+        # Usamos el índice + 2 para alinearlo con el número de fila del archivo CSV original
+        is_id_empty = df['id_credito'].isna() | (df['id_credito'].astype(str).str.strip() == "")
+        row_ids = np.where(
+            is_id_empty,
+            [f"(fila_{i + 2})" for i in df.index],
+            df['id_credito'].astype(str).str.strip()
+        )
+        
+        fallos_list = []
+        
+        # ──── REGLAS 1, 2, 3: Validación de Nulos ────
+        for col, regla in [('id_credito', 'nulo_id_credito'), ('monto', 'nulo_monto'), ('fecha_originacion', 'nulo_fecha_originacion')]:
+            is_null = df[col].isna() | (df[col].astype(str).str.strip() == "")
+            if is_null.any():
+                fallos_list.append(pd.DataFrame({
+                    "id_credito": row_ids[is_null],
+                    "regla": regla,
+                    "motivo": f"El campo {col} esta vacio o es nulo"
+                }))
 
+        # ──── REGLAS 4, 5: Validación de Monto ────
+        monto_not_null = ~(df['monto'].isna() | (df['monto'].astype(str).str.strip() == ""))
+        monto_numeric = pd.to_numeric(df['monto'], errors='coerce')
 
-def validar_nulos(registros: list[dict]) -> list[dict]:
-    """Detecta valores nulos o vacíos en id_credito, monto y fecha_originacion."""
-    fallos = []
-    for i, r in enumerate(registros):
-        row_id = r["id_credito"].strip() if r["id_credito"] else f"(fila_{i + 2})"
-
-        if not r["id_credito"] or r["id_credito"].strip() == "":
-            fallos.append({
-                "id_credito": row_id,
-                "regla": "nulo_id_credito",
-                "motivo": "El campo id_credito esta vacio o es nulo",
-            })
-
-        if not r["monto"] or r["monto"].strip() == "":
-            fallos.append({
-                "id_credito": row_id,
-                "regla": "nulo_monto",
-                "motivo": "El campo monto esta vacio o es nulo",
-            })
-
-        if not r["fecha_originacion"] or r["fecha_originacion"].strip() == "":
-            fallos.append({
-                "id_credito": row_id,
-                "regla": "nulo_fecha_originacion",
-                "motivo": "El campo fecha_originacion esta vacio o es nulo",
-            })
-
-    return fallos
-
-
-def validar_montos_rango(registros: list[dict]) -> list[dict]:
-    """Detecta montos fuera del rango [$1,000 – $5,000,000] o no numéricos."""
-    fallos = []
-    for i, r in enumerate(registros):
-        row_id = r["id_credito"].strip() if r["id_credito"] else f"(fila_{i + 2})"
-
-        if not r["monto"] or r["monto"].strip() == "":
-            continue  # ya reportado como nulo_monto
-
-        try:
-            monto = float(r["monto"])
-            if monto < MONTO_MIN:
-                fallos.append({
-                    "id_credito": row_id,
-                    "regla": "monto_fuera_rango",
-                    "motivo": (
-                        f"Monto ${monto:,.2f} por debajo del minimo "
-                        f"(${MONTO_MIN:,})"
-                    ),
-                })
-            elif monto > MONTO_MAX:
-                fallos.append({
-                    "id_credito": row_id,
-                    "regla": "monto_fuera_rango",
-                    "motivo": (
-                        f"Monto ${monto:,.2f} excede el maximo "
-                        f"(${MONTO_MAX:,})"
-                    ),
-                })
-        except ValueError:
-            fallos.append({
-                "id_credito": row_id,
+        # Monto No Numérico
+        idx_no_num = monto_not_null & monto_numeric.isna()
+        if idx_no_num.any():
+            fallos_list.append(pd.DataFrame({
+                "id_credito": row_ids[idx_no_num],
                 "regla": "monto_no_numerico",
-                "motivo": f"El valor '{r['monto']}' no se puede interpretar como numero",
-            })
+                "motivo": df.loc[idx_no_num, 'monto'].apply(lambda val: f"El valor '{val}' no se puede interpretar como numero")
+            }))
 
-    return fallos
+        # Monto Bajo el Mínimo
+        idx_low = monto_numeric.notna() & (monto_numeric < MONTO_MIN)
+        if idx_low.any():
+            fallos_list.append(pd.DataFrame({
+                "id_credito": row_ids[idx_low],
+                "regla": "monto_fuera_rango",
+                "motivo": monto_numeric[idx_low].apply(lambda val: f"Monto ${val:,.2f} por debajo del minimo (${MONTO_MIN:,})")
+            }))
 
+        # Monto Excede el Máximo
+        idx_high = monto_numeric.notna() & (monto_numeric > MONTO_MAX)
+        if idx_high.any():
+            fallos_list.append(pd.DataFrame({
+                "id_credito": row_ids[idx_high],
+                "regla": "monto_fuera_rango",
+                "motivo": monto_numeric[idx_high].apply(lambda val: f"Monto ${val:,.2f} excede el maximo (${MONTO_MAX:,})")
+            }))
 
-def validar_duplicados(registros: list[dict]) -> list[dict]:
-    """Detecta id_credito duplicados."""
-    ids_no_nulos = [
-        r["id_credito"].strip()
-        for r in registros
-        if r["id_credito"] and r["id_credito"].strip()
-    ]
-    conteo = Counter(ids_no_nulos)
-    duplicados = {id_ for id_, c in conteo.items() if c > 1}
-
-    fallos = []
-    for i, r in enumerate(registros):
-        id_cred = r["id_credito"].strip() if r["id_credito"] else ""
-        if id_cred in duplicados:
-            fallos.append({
-                "id_credito": id_cred,
+        # ──── REGLA 6: Validación de Duplicados de id_credito ────
+        id_not_null = ~is_id_empty
+        ids_cleaned = df['id_credito'].astype(str).str.strip()
+        id_counts = ids_cleaned[id_not_null].value_counts()
+        duplicados = id_counts[id_counts > 1].index
+        idx_dup = id_not_null & ids_cleaned.isin(duplicados)
+        if idx_dup.any():
+            fallos_list.append(pd.DataFrame({
+                "id_credito": row_ids[idx_dup],
                 "regla": "duplicado_id",
-                "motivo": (
-                    f"id_credito={id_cred} aparece {conteo[id_cred]} veces "
-                    f"(duplicado)"
-                ),
-            })
+                "motivo": ids_cleaned[idx_dup].apply(lambda val: f"id_credito={val} aparece {id_counts[val]} veces (duplicado)")
+            }))
 
-    return fallos
-
-
-def validar_formato_fecha(registros: list[dict]) -> list[dict]:
-    """
-    Detecta fechas con formato inválido:
-      - No cumplen con el patrón YYYY-MM-DD
-      - No son una fecha real del calendario (ej. 2024-02-30)
-    """
-    fallos = []
-    for i, r in enumerate(registros):
-        row_id = r["id_credito"].strip() if r["id_credito"] else f"(fila_{i + 2})"
-
-        fecha = r["fecha_originacion"]
-        if not fecha or fecha.strip() == "":
-            continue  # ya reportado como nulo_fecha_originacion
-
-        if not _es_fecha_valida(fecha):
-            fallos.append({
-                "id_credito": row_id,
+        # ──── REGLA 7: Validación de Formato de Fecha (YYYY-MM-DD) ────
+        fecha_not_null = ~(df['fecha_originacion'].isna() | (df['fecha_originacion'].astype(str).str.strip() == ""))
+        fechas_cleaned = df['fecha_originacion'].astype(str).str.strip()
+        # Verifica sintaxis estricta
+        regex_match = fechas_cleaned.str.match(r'^\d{4}-\d{2}-\d{2}$') == True
+        # Verifica que sea un día real en el calendario (ej: evita 2026-02-30)
+        parsed_dates = pd.to_datetime(fechas_cleaned, format='%Y-%m-%d', errors='coerce')
+        
+        idx_fecha_err = fecha_not_null & (~regex_match | parsed_dates.isna())
+        if idx_fecha_err.any():
+            fallos_list.append(pd.DataFrame({
+                "id_credito": row_ids[idx_fecha_err],
                 "regla": "formato_fecha_invalido",
-                "motivo": (
-                    f"fecha_originacion='{fecha.strip()}' no cumple con el "
-                    f"formato YYYY-MM-DD o no es una fecha valida"
-                ),
-            })
+                "motivo": fechas_cleaned[idx_fecha_err].apply(lambda val: f"fecha_originacion='{val}' no cumple con el formato YYYY-MM-DD o no es una fecha valida")
+            }))
 
-    return fallos
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# PIPELINE PRINCIPAL
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def cargar_datos(archivo: str) -> list[dict]:
-    """Carga los registros desde el CSV fuente."""
-    with open(archivo, "r", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def ejecutar_validaciones(registros: list[dict]) -> list[dict]:
+        # Consolidar todos los DataFrames de fallos
+        if fallos_list:
+            df_fallos = pd.concat(fallos_list, ignore_index=True)
+        else:
+            df_fallos = pd.DataFrame(columns=["id_credito", "regla", "motivo"])
+            
+        # Log de métricas por consola/log
+        logger.info("  nulos: %d fallos", len(df_fallos[df_fallos['regla'].str.startswith('nulo_')]))
+        logger.info("  monto rango: %d fallos", len(df_fallos[df_fallos['regla'].isin(['monto_no_numerico', 'monto_fuera_rango'])]))
+        logger.info("  duplicados: %d fallos", len(df_fallos[df_fallos['regla'] == 'duplicado_id']))
+        logger.info("  formato fecha: %d fallos", len(df_fallos[df_fallos['regla'] == 'formato_fecha_invalido']))
+        
+        return df_fallos
+    except Exception as e:
+        logger.error(f"Error al ejecutar las validaciones: {e}")
+        
+def generar_estadisticas(df: pd.DataFrame, df_fallos: pd.DataFrame) -> dict:
     """
-    Ejecuta todas las reglas de validación.
-    Retorna una lista consolidada de fallos (cada fallo es un dict
-    con id_credito, regla y motivo).
+    Genera estadísticas de calidad de datos a partir del DataFrame original y el DataFrame de fallos.
     """
-    logger.info("Ejecutando validaciones de calidad...")
+    total_registros = len(df)
+    total_fallos = len(df_fallos)
+    total_validos = total_registros - total_fallos
+    porcentaje_fallos = (total_fallos / total_registros) * 100 if total_registros > 0 else 0
 
-    todas = []
-
-    fallos_nulos = validar_nulos(registros)
-    todas.extend(fallos_nulos)
-    logger.info("  nulos: %d fallos", len(fallos_nulos))
-
-    fallos_rango = validar_montos_rango(registros)
-    todas.extend(fallos_rango)
-    logger.info("  monto rango: %d fallos", len(fallos_rango))
-
-    fallos_dup = validar_duplicados(registros)
-    todas.extend(fallos_dup)
-    logger.info("  duplicados: %d fallos", len(fallos_dup))
-
-    fallos_fecha = validar_formato_fecha(registros)
-    todas.extend(fallos_fecha)
-    logger.info("  formato fecha: %d fallos", len(fallos_fecha))
-
-    return todas
-
-
-def generar_estadisticas(
-    registros: list[dict], fallos: list[dict]
-) -> dict:
-    """Calcula estadísticas consolidadas del reporte de calidad."""
-    total = len(registros)
-
-    # IDs únicos que tienen al menos un fallo
-    ids_con_fallo: set[str] = set()
-    for f in fallos:
-        ids_con_fallo.add(f["id_credito"])
-
-    conteo_por_regla = Counter(f["regla"] for f in fallos)
-
-    return {
-        "total": total,
-        "pasaron": total - len(ids_con_fallo),
-        "fallaron": len(ids_con_fallo),
-        "total_fallos": len(fallos),
-        "por_regla": dict(conteo_por_regla),
+    estadisticas = {
+        "total_registros": total_registros,
+        "total_fallos": total_fallos,
+        "total_validos": total_validos,
+        "porcentaje_fallos": porcentaje_fallos
     }
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# GENERACIÓN DE REPORTES
-# ═══════════════════════════════════════════════════════════════════════════════
-
-def guardar_csv_fallidos(fallos: list[dict], archivo: str) -> None:
-    """Guarda los registros fallidos como CSV."""
-    os.makedirs(os.path.dirname(archivo), exist_ok=True)
-    with open(archivo, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["id_credito", "regla", "motivo"])
-        writer.writeheader()
-        writer.writerows(fallos)
-    logger.info("CSV de fallidos guardado: %s", archivo)
-
-
-def guardar_reporte_excel(
-    stats: dict, fallos: list[dict], archivo: str
-) -> None:
-    """Guarda el reporte de calidad en formato Excel (.xlsx) con 3 hojas."""
-    os.makedirs(os.path.dirname(archivo), exist_ok=True)
-
-    with pd.ExcelWriter(archivo, engine="openpyxl") as writer:
-        # Hoja 1 — Resumen
-        df_resumen = pd.DataFrame([
-            {"Métrica": "Total de registros evaluados",
-             "Valor": stats["total"]},
-            {"Métrica": "Registros que pasaron todas las reglas",
-             "Valor": stats["pasaron"]},
-            {"Métrica": "Registros que fallaron al menos una regla",
-             "Valor": stats["fallaron"]},
-            {"Métrica": "Total de fallos detectados",
-             "Valor": stats["total_fallos"]},
-        ])
-        df_resumen.to_excel(writer, sheet_name="Resumen", index=False)
-
-        # Hoja 2 — Fallos por regla
-        df_reglas = pd.DataFrame([
-            {"Regla": regla, "Cantidad de fallos": cant}
-            for regla, cant in sorted(
-                stats["por_regla"].items(), key=lambda x: -x[1]
-            )
-        ])
-        df_reglas.to_excel(writer, sheet_name="Fallos_por_regla", index=False)
-
-        # Hoja 3 — Detalle de registros fallidos
-        df_fallos = pd.DataFrame(fallos)
-        df_fallos.to_excel(writer, sheet_name="Detalle_fallos", index=False)
-
-    logger.info("Reporte Excel guardado: %s", archivo)
-
-
-def guardar_reporte_md(stats: dict, archivo: str) -> None:
-    """Guarda el reporte de calidad en formato Markdown."""
-    os.makedirs(os.path.dirname(archivo), exist_ok=True)
-
-    lines: list[str] = []
-    lines.append("# Reporte de Calidad de Datos")
-    lines.append("")
-    lines.append("## Resumen")
-    lines.append("")
-    lines.append("| Métrica | Valor |")
-    lines.append("|------------------------------------------|-------|")
-    lines.append(
-        f"| Total de registros evaluados            | {stats['total']:,} |"
-    )
-    lines.append(
-        f"| Registros que pasaron todas las reglas   | {stats['pasaron']:,} |"
-    )
-    lines.append(
-        f"| Registros que fallaron al menos una regla| {stats['fallaron']:,} |"
-    )
-    lines.append(
-        f"| Total de fallos detectados               | {stats['total_fallos']:,} |"
-    )
-    lines.append("")
-    lines.append("## Fallos por regla")
-    lines.append("")
-    lines.append("| Regla | Cantidad de fallos |")
-    lines.append("|---------------------------|-------------------|")
-    for regla, cant in sorted(stats["por_regla"].items(), key=lambda x: -x[1]):
-        lines.append(f"| {regla} | {cant:,} |")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-    lines.append(
-        f"*Reporte generado automáticamente el "
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
-    )
-
-    with open(archivo, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
-
-    logger.info("Reporte Markdown guardado: %s", archivo)
-
+    logger.info("Estadísticas generadas: %s", estadisticas)
+    return estadisticas
 
 def imprimir_resumen_consola(stats: dict) -> None:
     """Imprime el resumen del reporte en la terminal."""
     print("\n" + "=" * 55)
     print("  REPORTE DE CALIDAD DE DATOS")
     print("=" * 55)
-    print(f"  Total de registros evaluados:           {stats['total']:>6,}")
-    print(f"  Registros que pasaron todas las reglas: {stats['pasaron']:>6,}")
-    print(f"  Registros que fallaron:                 {stats['fallaron']:>6,}")
+    print(f"  Total de registros evaluados:           {stats['total_registros']:>6,}")
+    print(f"  Registros que pasaron todas las reglas: {stats['total_validos']:>6,}")
     print(f"  Total de fallos detectados:             {stats['total_fallos']:>6,}")
-    print("-" * 55)
-    print("  Fallos por regla:")
-    for regla, cant in sorted(stats["por_regla"].items(), key=lambda x: -x[1]):
-        print(f"    - {regla:<32s} {cant:>6,}")
+    print(f"  Porcentaje de fallos:             {stats['porcentaje_fallos']:>6,}")
     print("=" * 55)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# PUNTO DE ENTRADA
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def main() -> None:
     logger.info("=" * 50)
-    logger.info("INICIO DEL PIPELINE DE CALIDAD")
-
-    # 1. Cargar datos
-    print("Cargando datos desde data/raw/creditos_mes.csv ...")
-    registros = cargar_datos(INPUT_FILE)
-    print(f"  -> {len(registros):,} registros cargados.")
-    logger.info("Registros cargados: %d", len(registros))
-
+    # 1. Cargar el archivo CSV
+    print("Cargando archivo CSV...")
+    df = pd.read_csv(INPUT_FILE)
+    print(f"Archivo cargado con {len(df)} registros.")
+    
     # 2. Ejecutar validaciones
-    print("Ejecutando validaciones de calidad...")
-    fallos = ejecutar_validaciones(registros)
-
+    print("Ejecutando validaciones...")
+    df_fallos = ejecutar_validaciones(df)
+    
     # 3. Generar estadísticas
-    stats = generar_estadisticas(registros, fallos)
-
-    # 4. Guardar reportes
-    print("Guardando reportes en data/quality/ ...")
-    guardar_csv_fallidos(fallos, FAILED_CSV)
-    guardar_reporte_excel(stats, fallos, EXCEL_REPORT)
-    guardar_reporte_md(stats, MD_REPORT)
-
+    stats = generar_estadisticas(df, df_fallos)
+    
+    # 4. Guardar resultados
+    print("Guardando estadísticas de calidad...")
+    df_fallos.to_csv(FAILED_CSV, index=False)
+    
     # 5. Resumen en consola
     imprimir_resumen_consola(stats)
-
     print(f"\nArchivos generados:")
     print(f"  - {FAILED_CSV}")
-    print(f"  - {EXCEL_REPORT}")
-    print(f"  - {MD_REPORT}")
-
+    
     logger.info("PIPELINE FINALIZADO EXITOSAMENTE")
     print("\n[OK] Pipeline de calidad completado.")
-
-
 if __name__ == "__main__":
     main()
