@@ -16,10 +16,16 @@ Salidas:
 
 import logging
 import os
+import sys
 from datetime import datetime
 
-import pandas as pd
+import duckdb
 import numpy as np
+import pandas as pd
+
+# Agregar scripts/ al path para importar dbt_runner
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dbt_runner
 
 # ── Configuración de rutas ───────────────────────────────────────────────────
 
@@ -27,8 +33,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INPUT_FILE = os.path.join(BASE_DIR, "data", "raw", "creditos_mes.csv")
 QUALITY_DIR = os.path.join(BASE_DIR, "data", "reports")
 FAILED_CSV = os.path.join(QUALITY_DIR, "registros_fallidos.csv")
-EXCEL_REPORT = os.path.join(QUALITY_DIR, "reporte_calidad.xlsx")
-MD_REPORT = os.path.join(QUALITY_DIR, "reporte_calidad.md")
 LOGS_DIR = os.path.join(BASE_DIR, "logs")
 
 MONTO_MIN = 1_000
@@ -39,7 +43,7 @@ MONTO_MAX = 5_000_000
 os.makedirs(LOGS_DIR, exist_ok=True)
 
 logging.basicConfig(
-    filename=os.path.join(LOGS_DIR, "data_quality.log"),
+    filename=os.path.join(LOGS_DIR, "pipeline.log"),
     filemode="a",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -180,30 +184,92 @@ def imprimir_resumen_consola(stats: dict) -> None:
     print(f"  Porcentaje de fallos:             {stats['porcentaje_fallos']:>6,}")
     print("=" * 55)
 
+def cargar_a_duckdb(df: pd.DataFrame, df_fallos: pd.DataFrame) -> int:
+    """
+    Filtra los registros que pasaron todas las validaciones, los deduplica
+    y los carga en DuckDB como raw.raw_creditos para que dbt los transforme.
+    Retorna el número de registros cargados.
+    """
+    logger.info("Cargando datos limpios en DuckDB...")
+
+    # Reconstruir los mismos identificadores de fila usados en validaciones
+    is_id_empty = (
+        df["id_credito"].isna()
+        | (df["id_credito"].astype(str).str.strip() == "")
+    )
+    row_ids = np.where(
+        is_id_empty,
+        [f"(fila_{i + 2})" for i in df.index],
+        df["id_credito"].astype(str).str.strip(),
+    )
+
+    # Filtrar registros sin fallos
+    fallidos_set = set(df_fallos["id_credito"].unique())
+    mask_limpio = ~pd.Series(row_ids).isin(fallidos_set).values
+    df_limpio = df[mask_limpio].copy()
+
+    # Deduplicar por id_credito (conserva el primero)
+    df_limpio = df_limpio.drop_duplicates(subset="id_credito", keep="first")
+
+    # Cargar a DuckDB
+    db_path = os.path.join(BASE_DIR, "data", "kapital_creditos.duckdb")
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    con = duckdb.connect(db_path)
+    con.execute("CREATE SCHEMA IF NOT EXISTS raw")
+    con.execute("CREATE OR REPLACE TABLE raw.raw_creditos AS SELECT * FROM df_limpio")
+    count = con.execute("SELECT COUNT(*) FROM raw.raw_creditos").fetchone()[0]
+    con.close()
+
+    logger.info("Registros limpios cargados en raw.raw_creditos: %d", count)
+    return count
+
+
 def main() -> None:
     logger.info("=" * 50)
-    # 1. Cargar el archivo CSV
+    logger.info("INICIO DEL PIPELINE")
+
+    # ── 1. Cargar el archivo CSV ─────────────────────────────────────────
     print("Cargando archivo CSV...")
     df = pd.read_csv(INPUT_FILE)
-    print(f"Archivo cargado con {len(df)} registros.")
-    
-    # 2. Ejecutar validaciones
-    print("Ejecutando validaciones...")
+    print(f"  Archivo cargado con {len(df):,} registros.")
+    logger.info("Registros cargados: %d", len(df))
+
+    # ── 2. Ejecutar validaciones de calidad ──────────────────────────────
+    print("Ejecutando validaciones de calidad...")
     df_fallos = ejecutar_validaciones(df)
-    
-    # 3. Generar estadísticas
+
+    # ── 3. Generar estadísticas ──────────────────────────────────────────
     stats = generar_estadisticas(df, df_fallos)
-    
-    # 4. Guardar resultados
-    print("Guardando estadísticas de calidad...")
+
+    # ── 4. Guardar CSV de fallidos ───────────────────────────────────────
+    print("Guardando resultados de calidad...")
+    os.makedirs(QUALITY_DIR, exist_ok=True)
     df_fallos.to_csv(FAILED_CSV, index=False)
-    
-    # 5. Resumen en consola
+    print(f"  -> {FAILED_CSV}")
+
+    # ── 5. Resumen en consola ────────────────────────────────────────────
     imprimir_resumen_consola(stats)
+
+    # ── 6. Cargar datos limpios en DuckDB ────────────────────────────────
+    print("\nCargando datos limpios en DuckDB (raw.raw_creditos)...")
+    n_limpios = cargar_a_duckdb(df, df_fallos)
+    print(f"  -> {n_limpios:,} registros limpios cargados.")
+
+    # ── 7. Ejecutar modelos dbt ──────────────────────────────────────────
+    print("\nEjecutando modelos dbt (modelo estrella)...")
+    con = dbt_runner.ejecutar_dbt()
+    stats_dbt = dbt_runner.obtener_estadisticas(con)
+    print("\n  Tablas del modelo dimensional:")
+    for tabla, filas in stats_dbt.items():
+        print(f"    {tabla:<35s} {filas:>6,} filas")
+    con.close()
+
+    # ── 8. Reporte final de archivos generados ───────────────────────────
     print(f"\nArchivos generados:")
     print(f"  - {FAILED_CSV}")
-    
+    print(f"  - data/kapital_creditos.duckdb (modelo estrella)")
+
     logger.info("PIPELINE FINALIZADO EXITOSAMENTE")
-    print("\n[OK] Pipeline de calidad completado.")
+    print("\n[OK] Pipeline completado.")
 if __name__ == "__main__":
     main()
